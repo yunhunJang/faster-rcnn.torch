@@ -1,5 +1,5 @@
 -- specify the base path of the ILSVRC2015 dataset: 
-ILSVRC2015_BASE_DIR = '/data/imagenet/ILSVRC2015/'
+ILSVRC2015_BASE_DIR = '/data1/ilsvrc2015/ILSVRC2015_DET/'
 
 require 'lfs'
 require 'LuaXML'      -- if missing use luarocks install LuaXML

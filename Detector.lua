@@ -111,7 +111,7 @@ function Detector:detect(input)
       
       x.class = c[1]
       x.confidence = p[1]
-      print(x.class)
+      --print(x.class .. ',' .. math.exp(x.confidence))
       if x.class ~= bgclass and math.exp(x.confidence) > 0.2 then
         if not yclass[x.class] then
           yclass[x.class] = {}
@@ -130,7 +130,10 @@ function Detector:detect(input)
         bb[{j, 5}] = r.confidence
       end
       
+	  print(c)
+	  print(bb)
       pick = nms(bb, 0.1, bb[{{}, 5}])
+	  print(pick)
       pick:apply(function (x) table.insert(winners, c[x]) end ) 
      
     end

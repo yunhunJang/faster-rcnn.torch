@@ -26,8 +26,8 @@ cmd:text('=== Training ===')
 cmd:option('-cfg', 'config/imagenet.lua', 'configuration file')
 cmd:option('-model', 'models/vgg_small.lua', 'model factory file')
 cmd:option('-name', 'imgnet', 'experiment name, snapshot prefix') 
-cmd:option('-train', 'ILSVRC2015_DET.t7', 'training data file name')
-cmd:option('-restore', '', 'network snapshot file name to load')
+cmd:option('-data', 'ILSVRC2015_DET.t7', 'training data file name')
+cmd:option('-pretrain', '', 'network snapshot file name to load')
 cmd:option('-snapshot', 1000, 'snapshot interval')
 cmd:option('-plot', 100, 'plot training progress interval')
 cmd:option('-lr', 1E-4, 'learn rate')
@@ -144,7 +144,7 @@ function graph_training(cfg, model_path, snapshot_prefix, training_data_filename
     
     if i%opt.snapshot == 0 then
       -- save snapshot
-      save_model(string.format('%s_%06d.t7', snapshot_prefix, i), weights, opt, training_stats)
+      save_model(string.format('/data1/ilsvrc2016/exp/rcnn/%s_%06d.t7', snapshot_prefix, i), weights, opt, training_stats)
     end
     
   end
@@ -215,6 +215,46 @@ function evaluation_demo(cfg, model_path, training_data_filename, network_filena
   
 end
 
-graph_training(cfg, opt.model, opt.name, opt.train, opt.restore)
---evaluation_demo(cfg, opt.model, opt.train, opt.restore)
+function measure_map(cfg, model_path, val_data_filename, network_filename)
+  -- load trainnig data
+  local val_data = load_obj(val_data_filename)
+  
+  -- load model
+  local model = load_model(cfg, model_path, network_filename, true)
+  local batch_iterator = BatchIterator.new(model, val_data)
+    
+  local file_names = keys(val_data.ground_truth)
+  local numVal = #file_names
+  local red = torch.Tensor({1,0,0})
+  local green = torch.Tensor({0,1,0})
+  local blue = torch.Tensor({0,0,1})
+  local white = torch.Tensor({1,1,1})
+  local colors = { red, green, blue, white }
+  
+  -- create detector
+  local d = Detector(model)
+    
+  --for i=1,numVal do
+  for i=1,50 do
+  
+    -- pick random validation image
+    local b = batch_iterator:nextValidation(1)[1]
+    local img = b.img
+    
+    local matches = d:detect(img)
+    img = image.yuv2rgb(img)
+    -- draw bounding boxes and save image
+    for i,m in ipairs(matches) do
+      draw_rectangle(img, m.r, green)
+    end
+    
+    image.saveJPG(string.format('./examples/output%d.jpg', i), img)
+  end
+  
+end
+
+
+graph_training(cfg, opt.model, opt.name, opt.data, opt.pretrain)
+--evaluation_demo(cfg, opt.model, opt.data, opt.pretrain)
+--measure_map(cfg, opt.model, opt.data, opt.pretrain)
 
